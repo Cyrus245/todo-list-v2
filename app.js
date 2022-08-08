@@ -49,14 +49,21 @@ const item3 = new Item({
 })
 
 
-// Item.find({}, (err, foundItems) => {
 
-//     console.log(foundItems);
+const defaultItems = [item1, item2, item3];
 
-// }) 
+const listSchema = {
 
 
-const defaultItems = [item1, item2, item3]
+    name: String,
+    items: [itemSchema],
+}
+
+
+const List = mongoose.model("List", listSchema);
+
+
+
 
 
 app.get("/", (req, res) => {
@@ -84,41 +91,72 @@ app.get("/", (req, res) => {
 
             });
 
-
-
-
         }
 
-
-
-
-
     })
-
-
-
-
-
-
 
 })
 
 
-app.get('/work', (req, res) => {
 
 
-    res.render("list", {
 
-        listTitle: "Work List",
-        newlistItems: work,
-
-    })
-})
 
 app.get("/about", (req, res) => {
 
     res.render('about');
 })
+
+
+app.get('/:customlistName', (req, res) => {
+
+
+    const customListName = req.params.customlistName;
+
+    List.findOne({
+        name: customListName
+    }, (err, foundlist) => {
+
+        if (!err) {
+
+            if (!foundlist) {
+
+                const list = new List({
+
+                    name: customListName,
+                    items: defaultItems,
+
+
+
+                })
+                list.save();
+                res.redirect('/' + customListName)
+
+
+            } else {
+
+
+                res.render('list', {
+
+                    listTitle: foundlist.name,
+                    newlistItems: foundlist.items,
+
+
+                })
+            }
+
+        }
+
+
+    })
+
+
+
+
+})
+
+
+
 
 app.post("/", (req, res) => {
 
@@ -151,6 +189,8 @@ app.post('/delete', (req, res) => {
 
     res.redirect('/')
 })
+
+
 
 
 
