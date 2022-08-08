@@ -1,7 +1,6 @@
 const bodyParser = require('body-parser');
 const express = require('express');
-const date = require(__dirname + "/date.js");
-
+const mongoose = require('mongoose');
 const app = express();
 
 app.set('view engine', 'ejs');
@@ -11,25 +10,92 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(express.static("public"));
 
-const inputs = ["Buy food", "Cook food", "Eat food"];
-const work = [];
+
+mongoose.connect('mongodb://localhost:27017/todoListDB')
+
+const itemSchema = {
+
+
+    name: String
+}
+
+const Item = mongoose.model("Item", itemSchema);
+
+const item1 = new Item({
+
+    name: "Reading books",
+
+
+
+
+})
+
+const item2 = new Item({
+
+    name: "Cook Food",
+
+
+
+
+})
+
+const item3 = new Item({
+
+    name: "Watching Tv",
+
+
+
+
+})
+
+
+// Item.find({}, (err, foundItems) => {
+
+//     console.log(foundItems);
+
+// }) 
+
+
+const defaultItems = [item1, item2, item3]
 
 
 app.get("/", (req, res) => {
 
-    const week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const mnth = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 
-    const day = date.getDate();
 
-    res.render('list', {
+    Item.find({}, (err, foundItems) => {
 
-        listTitle: day,
-        newlistItems: inputs,
+        if (foundItems.length === 0) {
+
+            Item.insertMany(defaultItems, err => {
+
+                err ? console.log(err) : console.log("sucessfully saved to the database")
+            })
 
 
-    });
+            res.redirect('/')
+        } else {
+            res.render('list', {
+
+                listTitle: "Today",
+                newlistItems: foundItems,
+
+
+            });
+
+
+
+
+        }
+
+
+
+
+
+    })
+
+
 
 
 
@@ -57,17 +123,33 @@ app.get("/about", (req, res) => {
 app.post("/", (req, res) => {
 
 
-    const input = req.body.newItem;
-    if (req.body.list === 'Work') {
+    const itemName = req.body.newItem;
 
-        work.push(input);
-        res.redirect("/work");
+    const item = new Item({
 
-    } else {
+        name: itemName,
 
-        inputs.push(input)
-        res.redirect("/");
-    }
+    })
+
+    item.save();
+    res.redirect('/')
+
+
+
+})
+
+app.post('/delete', (req, res) => {
+
+
+    const checkedId = req.body.checkbox;
+
+    Item.findByIdAndRemove(checkedId, err => {
+
+
+        err ? console.log(err) : console.log(`sucessfully removed from db`)
+    })
+
+    res.redirect('/')
 })
 
 
