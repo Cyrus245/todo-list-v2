@@ -71,29 +71,68 @@ app.get("/", (req, res) => {
 
 
 
-    Item.find({}, (err, foundItems) => {
+    //   Item.find({}, (err, foundItems) => {
 
-        if (foundItems.length === 0) {
+    //         if (foundItems.length === 0) {
 
-            Item.insertMany(defaultItems, err => {
+    //             Item.insertMany(defaultItems)
+    //                 .then(m => {
+    //                     console.log(`sucessfully saved default items to database`)
+    //                 })
+    //                 .catch(e => {
 
-                err ? console.log(err) : console.log("sucessfully saved to the database")
-            })
-
-
-            res.redirect('/')
-        } else {
-            res.render('list', {
-
-                listTitle: "Today",
-                newlistItems: foundItems,
+    //                     console.log(e)
+    //                 })
 
 
-            });
+    //             res.redirect('/')
+    //         } else {
+    //             res.render('list', {
 
-        }
+    //                 listTitle: "Today",
+    //                 newlistItems: foundItems,
 
-    })
+
+    //             });
+
+    //         }
+
+    //     })
+
+    Item.find().then(foundItems => {
+
+            if (foundItems.length === 0) {
+
+                Item.insertMany(defaultItems)
+                    .then(m => {
+                        console.log(`sucessfully saved default items to database`)
+                    })
+                    .catch(e => {
+
+                        console.log(e)
+                    })
+
+
+                res.redirect('/')
+            } else {
+                res.render('list', {
+
+                    listTitle: "Today",
+                    newlistItems: foundItems,
+
+
+                });
+
+            }
+
+
+        })
+
+        .catch(e => {
+
+            console.log(e)
+        })
+
 
 })
 
@@ -181,11 +220,19 @@ app.post('/delete', (req, res) => {
 
     const checkedId = req.body.checkbox;
 
-    Item.findByIdAndRemove(checkedId, err => {
+    // Item.findByIdAndRemove(checkedId, err => {
 
 
-        err ? console.log(err) : console.log(`sucessfully removed from db`)
-    })
+    //     err ? console.log(err) : console.log(`sucessfully deleted checked item`)
+    // })
+
+    Item.findByIdAndRemove(checkedId).then(sucess => {
+
+            console.log(`sucessfully deleted checked items`)
+        })
+        .catch(e => {
+            console.log(e);
+        })
 
     res.redirect('/')
 })
