@@ -1,6 +1,7 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
+var _ = require('lodash')
 const app = express();
 
 app.set('view engine', 'ejs');
@@ -150,7 +151,8 @@ app.get("/about", (req, res) => {
 app.get('/:customlistName', (req, res) => {
 
 
-    const customListName = req.params.customlistName;
+    const customListName = _.capitalize(req.params.customlistName);
+
 
     List.findOne({
         name: customListName
@@ -201,6 +203,7 @@ app.post("/", (req, res) => {
 
 
     const itemName = req.body.newItem;
+    const listName = req.body.list;
 
     const item = new Item({
 
@@ -208,8 +211,28 @@ app.post("/", (req, res) => {
 
     })
 
-    item.save();
-    res.redirect('/')
+    if (listName === "Today") {
+
+        item.save();
+        res.redirect('/')
+
+
+    } else {
+
+        List.findOne({
+            name: listName
+        }).then(foundlist => {
+
+            foundlist.items.push(item);
+            foundlist.save();
+            res.redirect("/" + listName)
+
+        })
+
+
+
+    }
+
 
 
 
@@ -219,6 +242,49 @@ app.post('/delete', (req, res) => {
 
 
     const checkedId = req.body.checkbox;
+    const listName = req.body.listName;
+
+
+    if (listName === "Today") {
+
+        Item.findByIdAndRemove(checkedId).then(sucess => {
+
+                console.log(`sucessfully deleted checked items`)
+            })
+            .catch(e => {
+                console.log(e);
+            })
+
+        res.redirect('/')
+
+    } else {
+
+        List.findOneAndUpdate({
+            name: listName
+        }, {
+            $pull: {
+                items: {
+                    _id: checkedId
+                }
+            }
+        }).then(foundlist => {
+
+
+
+
+            res.redirect('/' + listName)
+
+
+
+        })
+
+
+
+
+
+    }
+
+
 
     // Item.findByIdAndRemove(checkedId, err => {
 
@@ -226,15 +292,6 @@ app.post('/delete', (req, res) => {
     //     err ? console.log(err) : console.log(`sucessfully deleted checked item`)
     // })
 
-    Item.findByIdAndRemove(checkedId).then(sucess => {
-
-            console.log(`sucessfully deleted checked items`)
-        })
-        .catch(e => {
-            console.log(e);
-        })
-
-    res.redirect('/')
 })
 
 
